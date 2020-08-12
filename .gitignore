@@ -19,6 +19,9 @@
 *.avi
 *.data
 *.json
+*.txt
+*.tflite
+*.pb
 
 *.cfg
 !cfg/yolov3*.cfg
