@@ -14,8 +14,8 @@ class tfliteConverter():
     def __init__(
         self,
         output_dir: str = 'inference/output',
-        torch_model_path: str = 'runs/exp5/weights/last.pt',
-        input_shape: List[int] = [1, 3, 640, 640],
+        torch_model_path: str = 'runs/exp18/weights/last.pt',
+        input_shape: List[int] = [1, 3, 1056, 1632],
         input_node_names: List[str] = ['input'],
         output_node_names: List[str] = ['output_0', 'output_1', 'output_2']
         ):
@@ -61,11 +61,19 @@ class tfliteConverter():
             print(f'TFLITE export success, saved as {self._tflite_model_path}')
         except Exception as e:
             print(f'TFLITE export failure: {e}')
+        interpreter = tf.lite.Interpreter(model_path=self._tflite_model_path)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        print(input_details)
+
 
     def _convert_torch_to_onnx(self, torch_model):
         torch_model.eval()
+        print('Evaluation succeed')
         torch_model.model[-1].export = True
+        print('Set export True.')
         dummy_input = torch.rand(*self._input_shape)
+        print(dummy_input.shape)
         y = torch_model(dummy_input)
         torch_model.fuse()
         torch.onnx.export(
