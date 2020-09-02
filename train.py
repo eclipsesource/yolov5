@@ -172,7 +172,7 @@ def train(hyp):
                                    hyp=hyp, augment=False, cache=opt.cache_images, rect=True)[0]
 
     # Model parameters
-    hyp['cls'] *= nc / 80.  # scale coco-tuned hyp['cls'] to current dataset
+    hyp['cls'] *= nc / 4.  # scale coco-tuned hyp['cls'] to current dataset
     model.nc = nc  # attach number of classes to model
     model.hyp = hyp  # attach hyperparameters to model
     model.gr = 1.0  # giou loss ratio (obj_loss = 1.0 or giou)

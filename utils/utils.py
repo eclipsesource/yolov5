@@ -116,7 +116,7 @@ def make_divisible(x, divisor):
     return math.ceil(x / divisor) * divisor
 
 
-def labels_to_class_weights(labels, nc=80):
+def labels_to_class_weights(labels, nc=4):
     # Get class weights (inverse frequency) from training labels
     if labels[0] is None:  # no labels loaded
         return torch.Tensor()
@@ -135,7 +135,7 @@ def labels_to_class_weights(labels, nc=80):
     return torch.from_numpy(weights)
 
 
-def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
+def labels_to_image_weights(labels, nc=4, class_weights=np.ones(4)):
     # Produces image weights based on class mAPs
     n = len(labels)
     class_counts = np.array([np.bincount(labels[i][:, 0].astype(np.int), minlength=nc) for i in range(n)])
@@ -654,7 +654,7 @@ def create_pretrained(f='weights/best.pt', s='weights/pretrained.pt'):  # from u
 
 def coco_class_count(path='../coco/labels/train2014/'):
     # Histogram of occurrences per class
-    nc = 80  # number classes
+    nc = 4  # number classes
     x = np.zeros(nc, dtype='int32')
     files = sorted(glob.glob('%s/*.*' % path))
     for i, file in enumerate(files):
