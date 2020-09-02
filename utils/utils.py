@@ -956,11 +956,20 @@ def plot_wh_methods():  # from utils.utils import *; plot_wh_methods()
     fig.savefig('comparison.png', dpi=200)
 
 
-def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max_size=640, max_subplots=16):
+def plot_images(
+    images,
+    targets,
+    paths=None,
+    fname='images.jpg',
+    names=None,
+    max_size=640,
+    max_subplots=16,
+    overwrite=True
+    ):
+    if os.path.isfile(fname) & (not overwrite):  # do not overwrite
+        return None
     tl = 3  # line thickness
     tf = max(tl - 1, 1)  # font thickness
-    if os.path.isfile(fname):  # do not overwrite
-        return None
 
     if isinstance(images, torch.Tensor):
         images = images.cpu().float().numpy()
