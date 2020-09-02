@@ -59,7 +59,7 @@ def check_img_size(img_size, s=32):
     return new_size
 
 
-def check_anchors(dataset, model, thr=4.0, imgsz=640):
+def check_anchors(dataset, model, thr=4.0, imgsz=(640, 640)):
     # Check anchor fit to data, recompute if necessary
     print('\nAnalyzing anchors... ', end='')
     m = model.module.model[-1] if hasattr(model, 'module') else model.model[-1]  # Detect()

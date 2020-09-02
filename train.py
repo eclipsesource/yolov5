@@ -81,7 +81,7 @@ def train(hyp):
     # Image sizes
     gs = int(max(model.stride))  # grid size (max stride)
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
-
+    imgsz = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
     # Optimizer
     nbs = 64  # nominal batch size
     accumulate = max(round(nbs / batch_size), 1)  # accumulate loss before optimizing
@@ -168,7 +168,7 @@ def train(hyp):
     assert mlc < nc, 'Label class %g exceeds nc=%g in %s. Correct your labels or your model.' % (mlc, nc, opt.cfg)
 
     # Testloader
-    testloader = create_dataloader(test_path, imgsz_test, batch_size, gs, opt,
+    testloader = create_dataloader(test_path, imgsz, batch_size, gs, opt,
                                    hyp=hyp, augment=False, cache=opt.cache_images, rect=True)[0]
 
     # Model parameters
@@ -202,7 +202,7 @@ def train(hyp):
     maps = np.zeros(nc)  # mAP per class
     results = (0, 0, 0, 0, 0, 0, 0)  # 'P', 'R', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification'
     scheduler.last_epoch = start_epoch - 1  # do not move
-    print('Image sizes %g train, %g test' % (imgsz, imgsz_test))
+    print(f'Image sizes {imgsz}')
     print('Using %g dataloader workers' % dataloader.num_workers)
     print('Starting training for %g epochs...' % epochs)
     # torch.autograd.set_detect_anomaly(True)
@@ -293,7 +293,7 @@ def train(hyp):
         if not opt.notest or final_epoch:  # Calculate mAP
             results, maps, times = test.test(opt.data,
                                              batch_size=batch_size,
-                                             imgsz=imgsz_test,
+                                             imgsz=imgsz,
                                              save_json=final_epoch and opt.data.endswith(os.sep + 'coco.yaml'),
                                              model=ema.ema,
                                              single_cls=opt.single_cls,
@@ -365,7 +365,7 @@ if __name__ == '__main__':
     parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16)
-    parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='train,test sizes')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1248, 846], help='training and testing image size. If only one number is given, the image will ')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const='get_last', default=False,
                         help='resume from given path/to/last.pt, or most recent run if blank.')

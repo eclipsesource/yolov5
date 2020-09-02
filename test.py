@@ -8,7 +8,7 @@ from utils.datasets import *
 def test(data,
          weights=None,
          batch_size=16,
-         imgsz=640,
+         imgsz=(640, 640),
          conf_thres=0.001,
          iou_thres=0.6,  # for NMS
          save_json=False,
