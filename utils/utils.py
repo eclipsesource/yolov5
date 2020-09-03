@@ -962,13 +962,12 @@ def plot_images(
     paths=None,
     fname='images.jpg',
     names=None,
-    max_size=640,
     max_subplots=16,
     overwrite=True
     ):
     if os.path.isfile(fname) & (not overwrite):  # do not overwrite
         return None
-    tl = 3  # line thickness
+    tl = 1  # line thickness
     tf = max(tl - 1, 1)  # font thickness
 
     if isinstance(images, torch.Tensor):
@@ -985,15 +984,8 @@ def plot_images(
     bs = min(bs, max_subplots)  # limit plot images
     ns = np.ceil(bs ** 0.5)  # number of subplots (square)
 
-    # Check if we should resize
-    scale_factor = max_size / max(h, w)
-    if scale_factor < 1:
-        h = math.ceil(scale_factor * h)
-        w = math.ceil(scale_factor * w)
-
     # Empty array for output
     mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
-
     # Fix class - colour map
     prop_cycle = plt.rcParams['axes.prop_cycle']
     # https://stackoverflow.com/questions/51350872/python-from-color-name-to-rgb
@@ -1006,10 +998,7 @@ def plot_images(
 
         block_x = int(w * (i // ns))
         block_y = int(h * (i % ns))
-
         img = img.transpose(1, 2, 0)
-        if scale_factor < 1:
-            img = cv2.resize(img, (w, h))
 
         mosaic[block_y:block_y + h, block_x:block_x + w, :] = img
         if len(targets) > 0:
