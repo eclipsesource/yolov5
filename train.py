@@ -22,23 +22,23 @@ except:
 
 # Hyperparameters
 hyp = {'optimizer': 'SGD',  # ['adam', 'SGD', None] if none, default is SGD
-       'lr0': 0.001,  # initial learning rate (SGD=1E-2, Adam=1E-3)
-       'momentum': 0.817,  # SGD momentum/Adam beta1
-       'weight_decay': 0.000398,  # optimizer weight decay
-       'giou': 0.357,  # giou loss gain
-       'cls': 0.347,  # cls loss gain
-       'cls_pw': 0.584,  # cls BCELoss positive_weight
-       'obj': 51.2,  # obj loss gain (*=img_size/320 if img_size != 320)
+       'lr0': 0.0001,  # initial learning rate (SGD=1E-2, Adam=1E-3)
+       'momentum': 0.692,  # SGD momentum/Adam beta1
+       'weight_decay': 0.000277,  # optimizer weight decay
+       'giou': 0.374,  # giou loss gain
+       'cls': 0.342,  # cls loss gain
+       'cls_pw': 0.717,  # cls BCELoss positive_weight
+       'obj': 52.8,  # obj loss gain (*=img_size/320 if img_size != 320)
        'obj_pw': 1.0,  # obj BCELoss positive_weight
-       'iou_t': 0.866,  # iou training threshold
-       'anchor_t': 3.04,  # anchor-multiple threshold
+       'iou_t': 0.674,  # iou training threshold
+       'anchor_t': 3.1,  # anchor-multiple threshold
        'fl_gamma': 0.0,  # focal loss gamma (efficientDet default is gamma=1.5)
        'hsv_h': 0,  # image HSV-Hue augmentation (fraction)
        'hsv_s': 0,  # image HSV-Saturation augmentation (fraction)
        'hsv_v': 0,  # image HSV-Value augmentation (fraction)
        'degrees': 0.0,  # image rotation (+/- deg)
        'translate': 0.0,  # image translation (+/- fraction)
-       'scale': 1.0,  # image scale (+/- gain)
+       'scale': 0.652,  # image scale (+/- gain)
        'shear': 0.0}  # image shear (+/- deg)
 
 
