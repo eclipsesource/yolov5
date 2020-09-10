@@ -22,7 +22,9 @@
 *.txt
 *.tflite
 *.pb
-
+events.out*
+hyp.yaml
+opt.yaml
 *.cfg
 !cfg/yolov3*.cfg
 
