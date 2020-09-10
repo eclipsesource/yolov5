@@ -819,8 +819,8 @@ def kmean_anchors(path='./data/coco128.yaml', n=9, img_size=640, thr=4.0, gen=10
 
 def print_mutation(hyp, results, bucket=''):
     # Print mutation results to evolve.txt (for use with train.py --evolve)
-    a = '%10s' * len(hyp) % tuple(hyp.keys())  # hyperparam keys
-    b = '%10.3g' * len(hyp) % tuple(hyp.values())  # hyperparam values
+    a = '%10s' * (len(hyp)-1) % tuple(hyp.keys())[1:]  # hyperparam keys
+    b = '%10.3g' * (len(hyp)-1) % tuple(hyp.values())[1:]  # hyperparam values
     c = '%10.4g' * len(results) % results  # results (P, R, mAP, F1, test_loss)
     print('\n%s\n%s\nEvolved fitness: %s\n' % (a, b, c))
 
