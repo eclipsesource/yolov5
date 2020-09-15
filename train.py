@@ -16,6 +16,7 @@ from utils.utils import *
 mixed_precision = True
 try:  # Mixed precision training https://github.com/NVIDIA/apex
     from apex import amp
+    print('Using mixed precision training: https://github.com/NVIDIA/apex')
 except:
     print('Apex recommended for faster mixed precision training: https://github.com/NVIDIA/apex')
     mixed_precision = False  # not installed
@@ -44,19 +45,18 @@ hyp = {'optimizer': 'SGD',  # ['adam', 'SGD', None] if none, default is SGD
 
 def train(hyp):
     print(f'Hyperparameters {hyp}')
-    log_dir = tb_writer.log_dir if tb_writer else 'runs/evolution'  # run directory
-    wdir = str(Path(log_dir) / 'weights') + os.sep  # weights directory
-
+    log_dir = tb_writer.log_dir if tb_writer else 'runs/evolution'  # run directory runs/exp*
+    wdir = str(Path(log_dir) / 'weights') + os.sep  # weights directory runs/exp*/weights
     os.makedirs(wdir, exist_ok=True)
     last = wdir + 'last.pt'
     best = wdir + 'best.pt'
     results_file = log_dir + os.sep + 'results.txt'
 
     # Save run settings
-    with open(Path(log_dir) / 'hyp.yaml', 'w') as f:
+    with open(Path(log_dir) / 'hyp.yaml', 'w') as f: # save hyperparams to hyp.yml
         yaml.dump(hyp, f, sort_keys=False)
     with open(Path(log_dir) / 'opt.yaml', 'w') as f:
-        yaml.dump(vars(opt), f, sort_keys=False)
+        yaml.dump(vars(opt), f, sort_keys=False) # opt is defined at the botom of the file
 
     epochs = opt.epochs  # 300
     batch_size = opt.batch_size  # 64
@@ -79,7 +79,7 @@ def train(hyp):
     model = Model(opt.cfg, nc=nc).to(device)
 
     # Image sizes
-    gs = int(max(model.stride))  # grid size (max stride)
+    gs = int(max(model.stride))  # grid size (max stride) what are strides???? [32, 16, 8]
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
     imgsz = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
     # Optimizer
@@ -147,7 +147,7 @@ def train(hyp):
 
         del ckpt
 
-    # Mixed precision training https://github.com/NVIDIA/apex
+    # Mixed precision training https://github.com/NVIDIA/apex ??????????????????????????????
     if mixed_precision:
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
@@ -162,7 +162,7 @@ def train(hyp):
 
     # Trainloader
     dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt,
-                                            hyp=hyp, augment=True, cache=opt.cache_images, rect=opt.rect)
+                                            hyp=hyp, augment=False, cache=opt.cache_images, rect=opt.rect)
     mlc = np.concatenate(dataset.labels, 0)[:, 0].max()  # max label class
     nb = len(dataloader)  # number of batches
     assert mlc < nc, 'Label class %g exceeds nc=%g in %s. Correct your labels or your model.' % (mlc, nc, opt.cfg)
@@ -225,7 +225,6 @@ def train(hyp):
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0 - 255 to 0.0 - 1.0
-
             # Warmup
             if ni <= nw:
                 xi = [0, nw]  # x interp
@@ -365,7 +364,7 @@ if __name__ == '__main__':
     parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16)
-    parser.add_argument('--img-size', nargs='+', type=int, default=[816, 520], help='training and testing image size. If only one number is given, the image will ')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1632, 1040], help='training and testing image size. If only one number is given, the image will ')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const='get_last', default='get_last',
                         help='resume from given path/to/last.pt, or most recent run if blank.')
@@ -383,6 +382,7 @@ if __name__ == '__main__':
     opt = parser.parse_args()
 
     last = get_latest_run() if opt.resume == 'get_last' else opt.resume  # resume from most recent run
+    print(last)
     if last and not opt.weights:
         print(f'Resuming training from {last}')
     opt.weights = last if opt.resume and not opt.weights else opt.weights
@@ -392,7 +392,7 @@ if __name__ == '__main__':
         opt.hyp = check_file(opt.hyp)  # check file
         with open(opt.hyp) as f:
             hyp.update(yaml.load(f, Loader=yaml.FullLoader))  # update hyps
-    print(opt)
+    print(f'Customized arguments: \n{opt}')
     opt.img_size.extend([opt.img_size[-1]] * (2 - len(opt.img_size)))  # extend to 2 sizes (train, test)
     device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
     if device.type == 'cpu':
