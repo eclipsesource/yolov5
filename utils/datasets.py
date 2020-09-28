@@ -350,19 +350,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             self.labels = [self.labels[i] for i in irect]
             self.shapes = s[irect]  # wh
             ar = ar[irect]
-
             # Set training image shapes
-            shapes = [[1, 1]] * nb
+            shapes = [[1, 1]] * nb # nb is number of batches if there are two batchs then it's gonna be [[1,1], [1,1]]
             for i in range(nb):
-                ari = ar[bi == i]
+                ari = ar[bi == i] # bi is batch index here we get the height-width ratio of each image in the current batch
                 mini, maxi = ari.min(), ari.max()
                 if maxi < 1:
-                    shapes[i] = [maxi, 1]
+                    shapes[i] = [1, 1]
                 elif mini > 1:
-                    shapes[i] = [1, 1 / mini]
-
+                    shapes[i] = [1, 1]
             self.batch_shapes = np.ceil(np.array(shapes) * np.array(img_size) / float(stride) + pad).astype(np.int) * stride
-
         # Cache labels
         create_datasubset, extract_bounding_boxes, labels_loaded = False, False, False
         nm, nf, ne, ns, nd = 0, 0, 0, 0, 0  # number missing, found, empty, datasubset, duplicate
