@@ -46,11 +46,12 @@ def exif_size(img):
     return s
 
 
-def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None, augment=False, cache=False, pad=0.0, rect=False):
+def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None, augment=False, cache=False, pad=0.0, rect=True):
     dataset = LoadImagesAndLabels(path, imgsz, batch_size,
                                   augment=augment,  # augment images
                                   hyp=hyp,  # augmentation hyperparameters
                                   rect=rect,  # rectangular training
+                                  image_weights=False,
                                   cache_images=cache,
                                   single_cls=opt.single_cls,
                                   stride=int(stride),
@@ -285,19 +286,19 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
-    def __init__(self, path, img_size=[640, 640], batch_size=16, augment=False, hyp=None, rect=False, image_weights=False,
+    def __init__(self, path, img_size, batch_size, augment=False, hyp=None, rect=True, image_weights=False,
                  cache_images=False, single_cls=False, stride=32, pad=0.0):
         try:
             f = []  # image files
             for p in path if isinstance(path, list) else [path]:
-                p = str(Path(p))  # os-agnostic
-                parent = str(Path(p).parent) + os.sep
+                p = str(Path(p))  # os-agnostic datadir/images/train or val
+                parent = str(Path(p).parent) + os.sep # datadir/images/
                 if os.path.isfile(p):  # file
                     with open(p, 'r') as t:
                         t = t.read().splitlines()
                         f += [x.replace('./', parent) if x.startswith('./') else x for x in t]  # local to global path
                 elif os.path.isdir(p):  # folder
-                    f += glob.iglob(p + os.sep + '*.*')
+                    f += glob.iglob(p + os.sep + '*.*') # glob all image paths under forlder
                 else:
                     raise Exception('%s does not exist' % p)
             self.img_files = [x.replace('/', os.sep) for x in f if os.path.splitext(x)[-1].lower() in img_formats]
@@ -331,7 +332,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         else:
             cache = self.cache_labels(cache_path)  # cache
         # Get labels
-        labels, shapes = zip(*[cache[x] for x in self.img_files])
+        labels, shapes = zip(*[cache[x] for x in self.img_files]) # here we get real image shape [width, height] labels are really read here
         self.shapes = np.array(shapes, dtype=np.float64)
         self.labels = list(labels)
         # Rectangular Training  https://github.com/ultralytics/yolov3/issues/232
@@ -339,7 +340,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # Sort by aspect ratio
             s = self.shapes  # wh
             ar = s[:, 1] / s[:, 0]  # aspect ratio
-            irect = ar.argsort()
+            irect = ar.argsort() # this is the index
             self.img_files = [self.img_files[i] for i in irect]
             self.label_files = [self.label_files[i] for i in irect]
             self.labels = [self.labels[i] for i in irect]
@@ -360,9 +361,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         nm, nf, ne, ns, nd = 0, 0, 0, 0, 0  # number missing, found, empty, datasubset, duplicate
         pbar = tqdm(self.label_files)
         for i, file in enumerate(pbar):
-            l = self.labels[i]  # label
-            if l.shape[0]:
-                assert l.shape[1] == 5, '> 5 label columns: %s' % file
+            l = self.labels[i]  # labels on this image
+            if l.shape[0]: # number of labels in this image
+                assert l.shape[1] == 5, '> 5 label columns: %s' % file #l.shape[1] is how many items in one label
                 assert (l >= 0).all(), 'negative labels: %s' % file
                 assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
                 if np.unique(l, axis=0).shape[0] < l.shape[0]:  # duplicate rows
@@ -481,8 +482,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             # Letterbox
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
-            shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
-
+            shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling h0w0 are original image shape. h and w are rescaled image shape
             # Load labels
             labels = []
             x = self.labels[index]
@@ -532,7 +532,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         if nL:
             labels_out[:, 1:] = torch.from_numpy(labels)
         # Convert
-        img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
+        img = img[:, :, ::-1].transpose(2, 0, 1)  # hwc to chw, to 3x416x416
         img = np.ascontiguousarray(img)
         return torch.from_numpy(img), labels_out, self.img_files[index], shapes
 
@@ -655,7 +655,7 @@ def replicate(img, labels):
     return img, labels
 
 
-def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
+def letterbox(img, new_shape, color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
     # Resize image to a 32-pixel-multiple rectangle https://github.com/ultralytics/yolov3/issues/232
     shape = img.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):

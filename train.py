@@ -24,7 +24,7 @@ except:
 
 # Hyperparameters
 hyp = {'optimizer': 'SGD',  # ['adam', 'SGD', None] if none, default is SGD
-       'lr0': 0.0001,  # initial learning rate (SGD=1E-2, Adam=1E-3)
+       'lr0': 0.000706,  # initial learning rate (SGD=1E-2, Adam=1E-3)
        'momentum': 0.692,  # SGD momentum/Adam beta1
        'weight_decay': 0.000277,  # optimizer weight decay
        'giou': 0.374,  # giou loss gain
@@ -352,54 +352,55 @@ def print_dict(dictionary: dict):
     for key, value in dictionary.items():
         print(key, ' : ', value)
     print('-' * 50)
+
+
 if __name__ == '__main__':
     check_git_status()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='models/yolov5s.yaml', help='model.yaml path')
-    parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path')
-    parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)')
-    parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('--batch-size', type=int, default=16)
-    parser.add_argument('--img-size', nargs='+', type=int, default=[1632, 1040], help='training and testing image size. If only one number is given, the image will ')
-    parser.add_argument('--rect', action='store_true', help='rectangular training')
-    parser.add_argument('--resume', nargs='?', const='get_last', default='get_last',
-                        help='resume from given path/to/last.pt, or most recent run if blank.')
-    parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
-    parser.add_argument('--notest', action='store_true', help='only test final epoch')
-    parser.add_argument('--noautoanchor', action='store_true', help='disable autoanchor check')
-    parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters')
-    parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
+    parser.add_argument('--cfg', type=str, default='models/yolov5s.yaml', help='model.yaml path') # backbone
+    parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path') # data
+    parser.add_argument('--hyp', type=str, default='', help='hyp.yaml path (optional)') # hyperparameters
+    parser.add_argument('--epochs', type=int, default=300) # epochs
+    parser.add_argument('--batch-size', type=int, default=16) # batch size
+    parser.add_argument('--nbs', type=int, default=16) # batch size
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1632, 1040], help='training and testing image size. If only one number is given, the image will ') # image size
+    parser.add_argument('--rect', action='store_false', help='rectangular training') # do we wanna resize the training images as well or only use the raw image shape
+    parser.add_argument('--resume', nargs='?', const='get_last', default='get_last', help='resume from given path/to/last.pt, or most recent run if blank.') # resume from pre training results
+    parser.add_argument('--nosave', action='store_true', help='only save final checkpoint') # ?
+    parser.add_argument('--notest', action='store_true', help='only test final epoch') # ?
+    parser.add_argument('--noautoanchor', action='store_true', help='disable autoanchor check') # ?
+    parser.add_argument('--evolve', action='store_true', help='evolve hyperparameters') # ?
+    parser.add_argument('--bucket', type=str, default='', help='gsutil bucket') # ?
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
-    parser.add_argument('--weights', type=str, default='', help='initial weights path')
-    parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
-    parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
+    parser.add_argument('--weights', type=str, default='', help='initial weights path') # want to resume from customized weight
+    parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied') # rename result file
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu') # choose training device
+    parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%') # ?
+    parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset') # If do nms seperately on each class. 'store_true' means False.
     opt = parser.parse_args()
-
+    print('Customized arguments:')
+    print_dict(vars(opt))
     last = get_latest_run() if opt.resume == 'get_last' else opt.resume  # resume from most recent run
-    print(last)
     if last and not opt.weights:
-        print(f'Resuming training from {last}')
+        print(f'Resuming training from {last} \n' + '-' * 50)
     opt.weights = last if opt.resume and not opt.weights else opt.weights
-    opt.cfg = check_file(opt.cfg)  # check file
-    opt.data = check_file(opt.data)  # check file
-    if opt.hyp:  # update hyps
-        opt.hyp = check_file(opt.hyp)  # check file
+    opt.cfg = check_file(opt.cfg)  # check existance of backbone
+    opt.data = check_file(opt.data)  # check existance of data
+    if opt.hyp: # check existance of hyperparameter file if passed path into opt.hyp
+        opt.hyp = check_file(opt.hyp)
         with open(opt.hyp) as f:
             hyp.update(yaml.load(f, Loader=yaml.FullLoader))  # update hyps
-    print(f'Customized arguments: \n{opt}')
-    opt.img_size.extend([opt.img_size[-1]] * (2 - len(opt.img_size)))  # extend to 2 sizes (train, test)
-    device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size)
+    opt.img_size = regularize_img_shape(opt.img_size)
+    device = torch_utils.select_device(opt.device, apex=mixed_precision, batch_size=opt.batch_size) # define devices
     if device.type == 'cpu':
         mixed_precision = False
-
+    print('Hyperparameters are: ')
+    print_dict(hyp) 
     # Train
     if not opt.evolve:
         tb_writer = SummaryWriter(log_dir=increment_dir('runs/exp', opt.name))
-        print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:6006/')
-        train(hyp)
-
+        print('Start Tensorboard with "tensorboard --logdir=runs", view at http://localhost:6006/\n'  + '-' * 50)
+        train(hyp, opt)
     # Evolve hyperparameters (optional)
     else:
         tb_writer = None
@@ -438,8 +439,7 @@ if __name__ == '__main__':
                 hyp[k] = float(np.clip(hyp[k], v[0], v[1]))
 
             # Train mutation
-            results = train(hyp.copy())
-
+            results = train(hyp.copy(), opt)
             # Write mutation results
             print_mutation(hyp, results, opt.bucket)
 
