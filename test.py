@@ -22,7 +22,7 @@ def test(data,
          weights=None,
          batch_size=16,
          imgsz=640,
-         conf_thres=0.001,
+         conf_thres=0.4,
          iou_thres=0.6,  # for NMS
          save_json=False,
          single_cls=False,
@@ -186,11 +186,11 @@ def test(data,
             stats.append((correct.cpu(), pred[:, 4].cpu(), pred[:, 5].cpu(), tcls))
 
         # Plot images
-        if batch_i < 1:
-            f = Path(save_dir) / ('test_batch%g_gt.jpg' % batch_i)  # filename
-            plot_images(img, targets, paths, str(f), names)  # ground truth
-            f = Path(save_dir) / ('test_batch%g_pred.jpg' % batch_i)
-            plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
+
+        f = Path(save_dir) / ('test_batch%g_gt.jpg' % batch_i)  # filename
+        plot_images(img, targets, paths, str(f), names)  # ground truth
+        f = Path(save_dir) / ('test_batch%g_pred.jpg' % batch_i)
+        plot_images(img, output_to_target(output, width, height), paths, str(f), names)  # predictions
 
     # Compute statistics
     stats = [np.concatenate(x, 0) for x in zip(*stats)]  # to numpy

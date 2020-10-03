@@ -385,7 +385,7 @@ if __name__ == '__main__':
     parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs')
-    parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='[train, test] image sizes')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[1648, 1648], help='[train, test] image sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const=False, default=True, help='resume most recent training')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -408,8 +408,8 @@ if __name__ == '__main__':
 
     # Set DDP variables
     opt.total_batch_size = opt.batch_size
-    opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1
-    opt.global_rank = int(os.environ['RANK']) if 'RANK' in os.environ else -1
+    opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1 # it is 1
+    opt.global_rank = int(os.environ['RANK']) if 'RANK' in os.environ else -1 # it is -1
     set_logging(opt.global_rank)
     if opt.global_rank in [-1, 0]:
         check_git_status()
@@ -434,7 +434,7 @@ if __name__ == '__main__':
     device = select_device(opt.device, batch_size=opt.batch_size)
 
     # DDP mode
-    if opt.local_rank != -1:
+    if opt.local_rank != -1: # it is -1 in our case
         assert torch.cuda.device_count() > opt.local_rank
         torch.cuda.set_device(opt.local_rank)
         device = torch.device('cuda', opt.local_rank)
@@ -445,7 +445,6 @@ if __name__ == '__main__':
     logger.info(opt)
     with open(opt.hyp) as f:
         hyp = yaml.load(f, Loader=yaml.FullLoader)  # load hyps
-
     # Train
     if not opt.evolve:
         tb_writer = None

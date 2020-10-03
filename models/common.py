@@ -101,7 +101,7 @@ class Concat(nn.Module):
 
 class NMS(nn.Module):
     # Non-Maximum Suppression (NMS) module
-    conf = 0.3  # confidence threshold
+    conf = 0.4  # confidence threshold
     iou = 0.6  # IoU threshold
     classes = None  # (optional list) filter by class
 
