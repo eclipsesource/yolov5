@@ -143,7 +143,7 @@ def train(hyp, opt):
                 file.write(ckpt['training_results'])  # write results.txt
         # epochs
         start_epoch = ckpt['epoch'] + 1
-        if epochs < start_epoch:
+        if opt.epochs < start_epoch:
             print('%s has been trained for %g epochs. Fine-tuning for %g additional epochs.' %
                     (opt.weights, ckpt['epoch'], opt.epochs))
             opt.epochs += ckpt['epoch']  # finetune additional epochs
