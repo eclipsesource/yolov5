@@ -559,9 +559,9 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.2, merge=False, 
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Settings
-    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
-    max_det = 300  # maximum number of detections per image
-    time_limit = 10.0  # seconds to quit after
+    min_wh, max_wh = 0, 100  # (pixels) minimum and maximum box width and height
+    max_det = 50  # maximum number of detections per image
+    time_limit = 20.0  # seconds to quit after
     redundant = True  # require redundant detections
     multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
 
